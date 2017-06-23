@@ -1,0 +1,80 @@
+<link rel="import" href="../polymer/polymer.html">
+
+<!--
+
+Download blob from ajax request.
+
+### 1) Add the downloader element.
+
+```html
+<ajax-blob-downloader
+  id="downloader"
+  default-file-name="checklist.txt">
+</ajax-blob-downloader>`
+```
+
+### 2) Add the ajax element that request and receive the blob content.
+
+```html
+<iron-ajax
+  id="downloadAjax"
+  handle-as="blob"
+  loading="{{_downloading}}"
+  on-response="_onFileDownloaded"
+  on-error="_onFileFailed">
+</iron-ajax>
+```
+
+### 3) Send it to ajax-blob-downloader element from download method.
+
+```js
+  _onFileDownloaded(e) {
+    this.$.downloader.download(e.detail);
+  }
+```
+
+### 4) Open the file! :)
+
+-->
+
+<dom-module id="ajax-blob-downloader">
+  <template>
+    <a id="downloadedFile" style="display: none" target="_blank"></a>
+  </template>
+
+  <script>
+    (function () {
+      'use strict';
+
+      Polymer({
+
+        is: 'ajax-blob-downloader',
+
+        properties: {
+          /**
+           * Default file name when the blob received doesn't contain the Content-Disposition header enabled in CORs configuration
+           *
+           * @attribute defaultFileName
+           * @type string
+           */
+          defaultFileName: {
+            type: String,
+            value: 'file.txt'
+          }
+        },
+
+        download(responseDetail) {
+          let url = window.URL.createObjectURL(responseDetail.xhr.response);
+          let contentDisposition = responseDetail.xhr.getResponseHeader('Content-Disposition');
+          let fileName = !contentDisposition ? this.defaultFileName : new RegExp(/^attachment; filename=([a-zA-Z0-9._]+)$/)
+                  .exec(contentDisposition)[1];
+
+          this.$.downloadedFile.setAttribute("href", url);
+          this.$.downloadedFile.setAttribute("download", fileName);
+          this.$.downloadedFile.click();
+        }
+
+      });
+    })();
+  </script>
+</dom-module>
